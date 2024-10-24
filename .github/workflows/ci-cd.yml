@@ -1,42 +1,37 @@
 name: CI/CD Pipeline
 
-# Trigger the workflow on push or pull request events to the master branch
 on:
   push:
     branches:
-      - master
+      - master  # Change this to your branch name if different
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      # Step 2: Set up Node.js (install Node.js and npm)
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Install Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: '14'  # Adjust the Node version as per your project needs
+          node-version: '16'  # Specify your Node.js version
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
+        working-directory: ./my-angular-app  # Adjust if needed
 
-      # Step 4: Build the application
-      - name: Build the application
+      - name: Build application
         run: npm run build --prod --aot --build-optimizer=false
+        working-directory: ./my-angular-app  # Adjust if needed
 
-      # Step 5: Deploy the build to the production server (using SSH)
-      - name: Deploy to production server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Add your private key to GitHub Secrets
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H your-server-ip >> ~/.ssh/known_hosts
-          scp -r dist/your-app-name/* ubuntu@your-server-ip:/var/www/your-app-directory
-          ssh ubuntu@your-server-ip "sudo systemctl restart nginx"
+      - name: Deploy to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: 18.117.131.36
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}  # Add your private key as a GitHub secret
+          port: 22
+          source: "./my-angular-app/dist/my-angular-app/*"
+          target: "/home/ubuntu/praveen_thati_cicd/my-angular-app/dist/my-angular-app/"
