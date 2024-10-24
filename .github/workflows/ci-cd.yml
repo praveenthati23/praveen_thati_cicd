@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+# Trigger the workflow on push or pull request events to the master branch
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js (install Node.js and npm)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'  # Adjust the Node version as per your project needs
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Build the application
+      - name: Build the application
+        run: npm run build --prod --aot --build-optimizer=false
+
+      # Step 5: Deploy the build to the production server (using SSH)
+      - name: Deploy to production server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Add your private key to GitHub Secrets
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H your-server-ip >> ~/.ssh/known_hosts
+          scp -r dist/your-app-name/* ubuntu@your-server-ip:/var/www/your-app-directory
+          ssh ubuntu@your-server-ip "sudo systemctl restart nginx"
