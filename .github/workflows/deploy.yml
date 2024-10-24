@@ -16,22 +16,22 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # Specify your Node.js version
+          node-version: '18'  # Match with your installed version
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./my-angular-app  # Adjust if needed
+        working-directory: ./my-angular-app
 
       - name: Build application
         run: npm run build --prod --aot --build-optimizer=false
-        working-directory: ./my-angular-app  # Adjust if needed
+        working-directory: ./my-angular-app
 
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
         with:
           host: 18.117.131.36
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}  # Add your private key as a GitHub secret
+          key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this secret contains your private key
           port: 22
           source: "./my-angular-app/dist/my-angular-app/*"
           target: "/home/ubuntu/praveen_thati_cicd/my-angular-app/dist/my-angular-app/"
